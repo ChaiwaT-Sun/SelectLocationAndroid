@@ -18,6 +18,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.sun.selectlocationandroid.dialog.MyLocationDialogFragment
 import java.util.*
 
 class MyPlaceLocationActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -39,22 +40,24 @@ class MyPlaceLocationActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var placeCoordinatesTextView: TextView
     private lateinit var placeProgressBar: ProgressBar
 
-    private var latitude = Constants.DEFAULT_LATITUDE
-    private var longitude = Constants.DEFAULT_LONGITUDE
-    private var initLatitude = Constants.DEFAULT_LATITUDE
-    private var initLongitude = Constants.DEFAULT_LONGITUDE
+    private var latitude = 13.736717
+    private var longitude = 100.523186
+    private var initLatitude = 13.736717
+    private var initLongitude = 100.523186
     private var showLatLong = true
-    private var zoom = Constants.DEFAULT_ZOOM
+    private var zoom = 14.0F
     private var addressRequired: Boolean = true
     private var shortAddress = ""
     private var fullAddress = ""
     private var mapRawResourceStyleRes: Int = -1
     private var addresses: List<Address>? = null
-    private var mapType: MapType = MapType.NORMAL
+
+    lateinit var dialog : MyLocationDialogFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+        bindViews()
         setupview()
     }
 
@@ -64,7 +67,7 @@ class MyPlaceLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
-        bindViews()
+
         placeCoordinatesTextView.visibility = if (showLatLong) View.VISIBLE else View.GONE
 
         placeSelectedFab.setOnClickListener {
@@ -74,6 +77,10 @@ class MyPlaceLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 returnIntent.putExtra(Constants.ADDRESS_INTENT, addressData)
                 setResult(RESULT_OK, returnIntent)
                 //  finish()
+
+                dialog = MyLocationDialogFragment()
+                dialog.addressData = addressData
+                dialog.show(supportFragmentManager,"ddd")
 
 
                 Toast.makeText(this, "${addressData}", Toast.LENGTH_LONG).show()
@@ -122,7 +129,6 @@ class MyPlaceLocationActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-
         map.setOnCameraMoveStartedListener {
             if (markerImage.translationY == 0f) {
                 markerImage.animate()
@@ -153,14 +159,7 @@ class MyPlaceLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         if (mapRawResourceStyleRes != -1) {
             map.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, mapRawResourceStyleRes))
         }
-        map.mapType = when (mapType) {
-            MapType.NORMAL -> GoogleMap.MAP_TYPE_NORMAL
-            MapType.SATELLITE -> GoogleMap.MAP_TYPE_SATELLITE
-            MapType.HYBRID -> GoogleMap.MAP_TYPE_HYBRID
-            MapType.TERRAIN -> GoogleMap.MAP_TYPE_TERRAIN
-            MapType.NONE -> GoogleMap.MAP_TYPE_NONE
-            else -> GoogleMap.MAP_TYPE_NORMAL
-        }
+
     }
 
     private fun showLoadingBottomDetails() {
